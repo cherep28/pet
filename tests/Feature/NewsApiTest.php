@@ -182,4 +182,34 @@ class NewsApiTest extends TestCase
             'slug'  => $news->slug
         ]);
     }
+
+    public function test_created_two_news_with_same_slug(): void{
+        $data = [
+            'title' => 'Новости города',
+            'content' => 'В городе открылся новый большой парк.',
+            'is_published' => true,
+        ];
+
+        $responseOne = $this->postJson("/api/news", $data);
+
+        $responseTwo = $this->postJson("/api/news", $data);
+
+        $responseOne->assertCreated();
+        $responseTwo->assertCreated();
+
+        $responseOne->assertJsonPath('data.slug', 'novosti-goroda');
+        $responseTwo->assertJsonPath('data.slug', 'novosti-goroda-1');
+
+        $this->assertDatabaseCount('news', 2);
+
+        $this->assertDatabaseHas('news',[
+            'id'    => $responseOne->json('data.id'),
+            'slug'  => 'novosti-goroda'
+        ]);
+
+        $this->assertDatabaseHas('news',[
+            'id'    => $responseTwo->json('data.id'),
+            'slug'  => 'novosti-goroda-1'
+        ]);
+    }
 }
