@@ -160,4 +160,26 @@ class NewsApiTest extends TestCase
         $response->assertJsonPath('data.0.title', $news->title);
         $response->assertJsonPath('meta.total', 1);
     }
+
+    public function test_invalid_update_doesnt_change_news(): void{
+        $news = News::factory()->create([
+            'title' => 'Новости города',
+            'slug'  => 'novosti-goroda',
+        ]);
+
+        $data = [
+            'title' => ''
+        ];
+
+        $response = $this->patchJson("/api/news/{$news->id}", $data);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors(['title']);
+
+        $this->assertDatabaseHas('news',[
+            'id'    => $news->id,
+            'title' => $news->title,
+            'slug'  => $news->slug
+        ]);
+    }
 }
