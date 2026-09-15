@@ -24,8 +24,23 @@ class NewsControllerApi extends Controller
 
         $query = News::query();
 
-        if ($search !== ''){
-            $query->where('title', 'like', '%' . $search . '%');
+        if ($search !== '') {
+            $lowerFunction = 'LOWER';
+
+            if ($query->getConnection()->getDriverName() === 'sqlite') {
+                $query->getConnection()->getReadPdo()->sqliteCreateFunction(
+                    'unicode_lower',
+                    static fn (string $value): string => mb_strtolower($value, 'UTF-8'),
+                    1
+                );
+
+                $lowerFunction = 'unicode_lower';
+            }
+
+            $query->whereRaw(
+                "{$lowerFunction}(title) LIKE ?",
+                ['%' . mb_strtolower($search, 'UTF-8') . '%']
+            );
         }
 
         $news = $query
