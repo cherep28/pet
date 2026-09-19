@@ -22,7 +22,9 @@ class NewsControllerApi extends Controller
 
         $search = trim((string) $request->string('search'));
 
-        $query = News::query();
+        $query = News::query()
+            ->where('is_published', true)
+            ->where('published_at', '<=', now());
 
         if ($search !== '') {
             $lowerFunction = 'LOWER';
